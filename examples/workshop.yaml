@@ -1,0 +1,16 @@
+title: "AI Agent Development Workshop"
+description: "Register for the hands-on weekend workshop."
+
+questions:
+  - title: "Full Name"
+    type: short_text
+    required: true
+
+  - title: "Academic Year"
+    type: dropdown
+    required: true
+    options:
+      - "1st Year"
+      - "2nd Year"
+      - "3rd Year"
+      - "4th Year"
