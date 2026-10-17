@@ -1,4 +1,3 @@
-use clap::{ValueHint::Other, builder::Str, error};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self},
@@ -25,7 +24,7 @@ pub struct QuestionSpec {
 impl QuestionSpec {
     fn validate_question(&self) -> Result<(), String> {
         let mut errors: String = String::new();
-        if self.title.is_empty() {
+        if self.title.trim().is_empty() {
             errors.push_str("Question title cannot be empty\n");
         }
 
@@ -40,7 +39,7 @@ impl QuestionSpec {
             }
             _ => {}
         }
-        if errors.chars().count() > 0 {
+        if !errors.trim().is_empty() {
             return Err(errors);
         }
         Ok(())
@@ -66,7 +65,7 @@ pub fn parse_yaml_file(file: &PathBuf) -> Result<FormData, String> {
 pub fn validate_form_data(form_data: &FormData) -> Result<(), String> {
     println!("Validating form");
     let mut errors = String::new();
-    if form_data.title.is_empty() {
+    if form_data.title.trim().is_empty() {
         errors.push_str("title empty in template file.\n");
     }
     
@@ -78,7 +77,7 @@ pub fn validate_form_data(form_data: &FormData) -> Result<(), String> {
             errors.push_str(&question_error);
         }
     }
-    if errors.chars().count() > 0 {
+    if !errors.trim().is_empty() {
         return Err(errors);
     }
     println!("No errors found");
