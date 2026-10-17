@@ -1,6 +1,6 @@
 use clap::{Args, Subcommand};
 
-use formhandler::{ parse_yaml_file};
+use formhandler::{ parse_yaml_file,validate_form_data};
 use std::path::PathBuf;
 mod formhandler;
 
@@ -27,10 +27,11 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
 
     println!("creating form with template : {:?}", filename.name);
     let form_template = parse_yaml_file(&filename.name)?;
+
+    validate_form_data(&form_template)?;
     println!(
         "{:?}, {:?},{:?}",
         form_template.title, form_template.description, form_template.questions
     );
-
     Ok(())
 }
