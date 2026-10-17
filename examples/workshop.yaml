@@ -7,7 +7,7 @@ questions:
     required: true
 
   - title: "Academic Year"
-    type: drop_down
+    type: dropdown
     required: true
     options:
       - "1st Year"
