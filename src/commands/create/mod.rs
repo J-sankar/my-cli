@@ -15,6 +15,11 @@ pub struct Filename {
     ///chooses the template yaml file for creating forms
     #[arg(value_name = "FILENAME")]
     name: PathBuf,
+
+    /// Validate and preview the template without creating a form.
+    #[arg(long)]
+    dry_run: bool
+
 }
 
 pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
@@ -29,6 +34,11 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
     let form_template = parse_yaml_file(&filename.name)?;
 
     validate_form_data(&form_template)?;
+
+    if filename.dry_run {
+        form_template.print_preview();
+        return  Ok(());
+    }
     println!(
         "{:?}, {:?},{:?}",
         form_template.title, form_template.description, form_template.questions

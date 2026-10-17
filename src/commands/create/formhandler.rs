@@ -12,6 +12,37 @@ pub struct FormData {
     pub questions: Vec<QuestionSpec>,
 }
 
+
+impl FormData {
+    pub fn print_preview(&self) {
+        println!("Dry run — no Google Form will be created.\n");
+
+        println!("Title: {}", self.title);
+
+        if let Some(description)  = &self.description{
+            println!("Description: {}", description.trim());
+        }
+
+        println!("Questions: {}\n", self.questions.len());
+
+        for (index, question) in self.questions.iter().enumerate() {
+            let required = if question.required {
+                "required"
+            } else {
+                "optional"
+            };
+
+            println!(
+                "{}. {} — {:?} — {}",
+                index + 1,
+                question.title,
+                question.question_type,
+                required
+            );
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct QuestionSpec {
     title: String,
@@ -72,12 +103,17 @@ pub fn validate_form_data(form_data: &FormData) -> Result<(), String> {
     if form_data.questions.is_empty() {
         errors.push_str("the template should contain atleast one question\n");
     }
-    for question in &form_data.questions {
+    for (index,question) in form_data.questions.iter().enumerate() {
         if let Err(question_error) = question.validate_question() {
-            errors.push_str(&question_error);
+            errors.push_str(&format!("Question {}\n{}\n",
+            index + 1,
+            
+            question_error.trim()));
         }
+        errors.push_str("\n");
     }
     if !errors.trim().is_empty() {
+        errors.insert_str(0, "Form Error\n");
         return Err(errors);
     }
     println!("No errors found");
