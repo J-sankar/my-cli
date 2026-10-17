@@ -44,8 +44,8 @@ dropdown
 ## Commands in Phase 1 
 
 ```bash
-mc create --template <PATH>
-mc create --template <PATH> --dry-run
+mc create form <FILENAME>
+mc create form <FILENAME> --dry-run
 mc auth login
 mc auth status
 mc auth logout
