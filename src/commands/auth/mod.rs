@@ -1,6 +1,7 @@
 use clap::Subcommand;
 use std::fmt;
 
+mod google;
 
 #[derive(Debug, Subcommand)]
 pub enum AuthProvider {
@@ -38,7 +39,7 @@ impl std::fmt::Display for AuthAction {
 pub fn handle_auth(auth_client: &AuthProvider) -> Result<(), String> {
     match auth_client {
         AuthProvider::Google(action) => {
-            println!("{} not implemented", action);
+            google::handle_google(&action)?;
             Ok(())
         }
         AuthProvider::Github(action) => {
@@ -47,3 +48,5 @@ pub fn handle_auth(auth_client: &AuthProvider) -> Result<(), String> {
         }
     }
 }
+
+
