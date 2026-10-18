@@ -6,7 +6,7 @@ mod formhandler;
 
 #[derive(Subcommand)]
 pub enum CreateCommands {
-    /// Adds files to myapp
+    /// create a google for from a yaml template
     Form(Filename),
 }
 

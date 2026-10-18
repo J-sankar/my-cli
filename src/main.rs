@@ -1,7 +1,8 @@
 use clap::Parser;
 
 mod commands;
-use crate::commands::{Commands, handle_create};
+
+use crate::commands::{Commands, auth::handle_auth, handle_create};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -19,6 +20,12 @@ fn main() {
     match &cli.command {
         Commands::Create(create_args) => {
             if let Err(error) = handle_create(create_args) {
+                eprintln!("error:{error}");
+                std::process::exit(1);
+            }
+        }
+        Commands::Auth(auth_provider) => {
+            if let Err(error) = handle_auth(auth_provider) {
                 eprintln!("error:{error}");
                 std::process::exit(1);
             }
