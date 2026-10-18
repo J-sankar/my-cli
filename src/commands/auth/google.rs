@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::path::Path;
 
 use super::AuthAction;
-
+const GOOGLE_CLIENT_CONFIG_PATH: &str = "credentials/client_secret.json";
 #[derive(Debug, Deserialize)]
 struct OAuthClientFile {
     installed: GoogleClientConfig,
@@ -17,7 +17,7 @@ pub struct GoogleClientConfig {
 }
 
 pub fn load_client_config() -> Result<GoogleClientConfig, String> {
-    let path = Path::new("credentials/client_secret.json");
+    let path = Path::new(GOOGLE_CLIENT_CONFIG_PATH);
     let file = std::fs::File::open(path).map_err(|error| error.to_string())?;
     let credentials: OAuthClientFile =
         serde_json::from_reader(&file).map_err(|error| error.to_string())?;
