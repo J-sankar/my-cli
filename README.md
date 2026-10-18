@@ -97,7 +97,7 @@ Phase 1 aims to create a Google Form from a local YAML template.
 - [x] Define the Phase 1 scope
 - [x] Scaffold the Rust CLI
 - [x] Parse YAML form templates
-- [ ] Validate form templates
+- [x] Validate form templates
 - [ ] Configure Google OAuth
 - [ ] Create forms through the Google Forms API
 - [ ] Add questions through the Google Forms API
