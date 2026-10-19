@@ -2,7 +2,7 @@
 use serde::Deserialize;
 use std::path::Path;
 
-use oauth2::reqwest::{self};
+use reqwest::{self};
 
 
 use crate::commands::auth::{callback};
@@ -116,7 +116,7 @@ let res = http_client.post(token_url).form(&params).send().map_err(|error| error
 if !res.status().is_success() {
         let status = res.status();
         let body = res.text().unwrap_or_default();
-        
+
         println!("token exchange failed ({status}): {body}");
     }
     Ok(())
