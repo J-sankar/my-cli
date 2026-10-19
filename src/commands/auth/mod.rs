@@ -2,6 +2,8 @@ use clap::Subcommand;
 use std::fmt;
 
 mod google;
+mod callback;
+pub mod utils;
 
 #[derive(Debug, Subcommand)]
 pub enum AuthProvider {
