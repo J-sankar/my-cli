@@ -1,8 +1,8 @@
 use clap::Subcommand;
 use std::fmt;
 
-mod google;
 mod callback;
+mod google;
 pub mod utils;
 
 #[derive(Debug, Subcommand)]
@@ -41,7 +41,7 @@ impl std::fmt::Display for AuthAction {
 pub fn handle_auth(auth_client: &AuthProvider) -> Result<(), String> {
     match auth_client {
         AuthProvider::Google(action) => {
-            google::handle_google(&action)?;
+            google::handle_google(action)?;
             Ok(())
         }
         AuthProvider::Github(action) => {
@@ -50,5 +50,3 @@ pub fn handle_auth(auth_client: &AuthProvider) -> Result<(), String> {
         }
     }
 }
-
-

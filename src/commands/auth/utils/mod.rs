@@ -7,21 +7,21 @@ pub struct AuthURLSchema {
     auth_uri: String,
     scope: Vec<String>,
     response_type: String,
-    state: String,
-    redirect_uri: String,
+    pub state: String,
+    redirect_url: String,
     client_id: String,
     code_challenge: String,
     code_challenge_method: String,
 }
 impl AuthURLSchema {
-    pub fn new(client_id: &String, redirect_uri: &String, auth_uri: &String) -> Self {
+    pub fn new(client_id: &String, redirect_url: &String, auth_uri: &String) -> Self {
         Self {
-            auth_uri:auth_uri.to_string(),
+            auth_uri: auth_uri.to_string(),
             scope: Vec::new(),
             response_type: String::from("code"),
             state: String::new(),
-            redirect_uri:redirect_uri.to_string(),
-            client_id:client_id.to_string(),
+            redirect_url: redirect_url.to_string(),
+            client_id: client_id.to_string(),
             code_challenge: String::new(),
             code_challenge_method: String::new(),
         }
@@ -36,7 +36,7 @@ impl AuthURLSchema {
         self.code_challenge_method = method.to_string()
     }
 
-    pub fn add_state(&mut self)  {
+    pub fn add_state(&mut self) {
         let state = generate_state();
         self.state = state;
     }
@@ -47,7 +47,7 @@ impl AuthURLSchema {
             &self.auth_uri, // &str or String
             &[
                 ("client_id", self.client_id.as_str()),
-                ("redirect_uri", self.redirect_uri.as_str()),
+                ("redirect_uri", self.redirect_url.as_str()),
                 ("response_type", self.response_type.as_str()),
                 ("scope", scope.as_str()),
                 ("code_challenge", self.code_challenge.as_str()),
@@ -81,4 +81,3 @@ fn generate_state() -> String {
     rand::rngs::OsRng.fill_bytes(&mut bytes);
     URL_SAFE_NO_PAD.encode(bytes)
 }
-

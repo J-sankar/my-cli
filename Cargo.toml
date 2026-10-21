@@ -14,4 +14,5 @@ url = "2.5.8"
 rand = "0.8"
 sha2 = "0.10"
 base64 = "0.22"
-reqwest = "0.13.5"
+reqwest = {version="0.13.5",features=["blocking","json","form"]}
+webbrowser = "1.2.4"
