@@ -1,6 +1,6 @@
 use clap::{Args, Subcommand};
 
-use formhandler::{ parse_yaml_file,validate_form_data};
+use formhandler::{parse_yaml_file, validate_form_data};
 use std::path::PathBuf;
 mod formhandler;
 
@@ -18,16 +18,12 @@ pub struct Filename {
 
     /// Validate and preview the template without creating a form.
     #[arg(long)]
-    dry_run: bool
-
+    dry_run: bool,
 }
 
 pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
     if !filename.name.is_file() {
-        return Err(format!(
-            "Not a valid file: {:?}",
-            filename.name.display()
-        ));
+        return Err(format!("Not a valid file: {:?}", filename.name.display()));
     }
 
     println!("creating form with template : {:?}", filename.name);
@@ -37,7 +33,7 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
 
     if filename.dry_run {
         form_template.print_preview();
-        return  Ok(());
+        return Ok(());
     }
     println!(
         "{:?}, {:?},{:?}",
