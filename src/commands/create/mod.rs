@@ -1,5 +1,7 @@
 use clap::{Args, Subcommand};
 
+use crate::commands::auth::google::{self, Unauthorized};
+use crate::utils::load_token;
 use formhandler::{parse_yaml_file, validate_form_data};
 use std::path::PathBuf;
 mod formhandler;
@@ -35,6 +37,26 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
         form_template.print_preview();
         return Ok(());
     }
+    let refresh_token = match load_token() {
+        Ok(token) => token,
+        Err(e) => {
+            if let Some(keyring::Error::NoEntry) = e.downcast_ref::<keyring::Error>() {
+                return Err("you have been logged out, please run login".to_string());
+            } else {
+                return Err(format!("{e}"));
+            }
+        }
+    };
+    let token_response = match google::get_new_token(&refresh_token) {
+        Ok(token_res) => token_res,
+        Err(e) => {
+            if e.is::<Unauthorized>() {
+                return Err("you have been logged out, please run login".to_string());
+            } else {
+                return Err(format!("{e}"));
+            }
+        }
+    };
     println!(
         "{:?}, {:?},{:?}",
         form_template.title, form_template.description, form_template.questions

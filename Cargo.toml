@@ -9,10 +9,10 @@ clap = { version = "4.6.7", features = ["derive"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_yaml = "0.9.34"
 serde_json ="1"
-tiny_http = "0.12.0"
 url = "2.5.8"
 rand = "0.8"
 sha2 = "0.10"
 base64 = "0.22"
 reqwest = {version="0.13.5",features=["blocking","json","form"]}
 webbrowser = "1.2.4"
+keyring = { version = "4.2.0", features = ["v1"] }

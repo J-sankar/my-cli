@@ -1,7 +1,7 @@
 use clap::Parser;
 
 mod commands;
-
+mod utils;
 use crate::commands::{Commands, auth::handle_auth, handle_create};
 
 #[derive(Parser)]

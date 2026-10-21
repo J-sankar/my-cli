@@ -1,13 +1,15 @@
+use core::fmt;
 use serde::Deserialize;
+use std::error::Error;
 use std::path::Path;
 use std::time::Duration;
 
 use reqwest::{self};
 
+use super::AuthAction;
 use crate::commands::auth::callback;
 use crate::commands::auth::utils::{AuthURLSchema, get_code_challenge_and_verifier};
-
-use super::AuthAction;
+use crate::utils::store_token;
 const GOOGLE_CLIENT_CONFIG_PATH: &str = "credentials/client_secret.json";
 #[derive(Deserialize)]
 struct OAuthClientFile {
@@ -21,6 +23,32 @@ pub struct GoogleClientConfig {
     pub auth_uri: String,
     pub token_uri: String,
     pub redirect_uris: Vec<String>,
+}
+
+#[derive(Deserialize)]
+pub struct GoogleOAuthTokenResponse {
+    expires_in: u64,
+    access_token: String,
+    refresh_token: String,
+    scope: String,
+    token_type: String,
+}
+#[derive(Deserialize)]
+pub struct GoogleRefreshResponse {
+    expires_in: u64,
+    access_token: String,
+    scope: String,
+    token_type: String,
+}
+
+impl fmt::Display for GoogleRefreshResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "access_token: redacted, expires in: {} , token_type: {}",
+            self.expires_in, self.token_type
+        )
+    }
 }
 
 pub fn load_client_config() -> Result<GoogleClientConfig, String> {
@@ -66,7 +94,7 @@ pub fn handle_google(action: &AuthAction) -> Result<(), String> {
     Ok(())
 }
 
-fn handle_oauth_flow(client_config: &GoogleClientConfig) -> Result<(), String> {
+pub fn handle_oauth_flow(client_config: &GoogleClientConfig) -> Result<(), String> {
     let (listener, port) = callback::bind_listener()?;
     println!("{port}");
 
@@ -122,12 +150,73 @@ fn handle_oauth_flow(client_config: &GoogleClientConfig) -> Result<(), String> {
         .send()
         .map_err(|error| error.to_string())?;
     let status = res.status();
-    let body: serde_json::Value = res.json().map_err(|error| error.to_string())?;
+
     if !status.is_success() {
-        return Err(format!("token exchange failed ({status}): {}", body));
-    } else {
-        println!("login successfull");
+        let error_body = res.text().unwrap_or_default();
+
+        return Err(format!(
+            "Google token exchange failed ({status}): {error_body}"
+        ));
     }
 
+    let body: GoogleOAuthTokenResponse = res
+        .json()
+        .map_err(|error| format!("Could not read Google token response: {error}"))?;
+
+    println!("Login successful.");
+    if body.access_token.is_empty() || body.refresh_token.is_empty() {
+        return Err("no tokens found".to_string());
+    }
+
+    store_token(&body.refresh_token)?;
     Ok(())
+}
+
+#[derive(Debug)]
+pub struct Unauthorized;
+
+impl fmt::Display for Unauthorized {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "unauthorized: token missing, inalid or expired")
+    }
+}
+
+impl Error for Unauthorized {}
+
+pub fn get_new_token(refresh_token: &str) -> Result<GoogleRefreshResponse, Box<dyn Error>> {
+    let http_client = reqwest::blocking::Client::new();
+    let client_config = load_client_config()?;
+    let token_uri = &client_config.token_uri;
+    let req_body = [
+        ("client_id", &client_config.client_id),
+        ("client_secret", &client_config.client_secret),
+        ("grant_type", &"refresh_token".to_string()),
+        ("refresh_token", &refresh_token.to_string()),
+    ];
+    let res = http_client
+        .post(token_uri)
+        .form(&req_body)
+        .send()
+        .map_err(|err| err.to_string())?;
+    let status = res.status();
+    if !status.is_success() {
+        let error_body = res.text().unwrap_or_default();
+        if (status == reqwest::StatusCode::BAD_REQUEST && error_body.contains("invalid_grant"))
+            || status == reqwest::StatusCode::UNAUTHORIZED
+        {
+            return Err(Unauthorized.into());
+        }
+        if status == reqwest::StatusCode::INTERNAL_SERVER_ERROR {
+            return Err("some error occured from googles side, please try again".into());
+        }
+        return Err(format!("Google token refresh failed ({status}): {error_body}").into());
+    }
+    let body: GoogleRefreshResponse = res.json().map_err(|err| err.to_string())?;
+    let google_token_response = GoogleRefreshResponse {
+        access_token: body.access_token,
+        expires_in: body.expires_in,
+        scope: body.scope,
+        token_type: body.token_type,
+    };
+    Ok(google_token_response)
 }

@@ -2,7 +2,7 @@ use clap::Subcommand;
 use std::fmt;
 
 mod callback;
-mod google;
+pub mod google;
 pub mod utils;
 
 #[derive(Debug, Subcommand)]
