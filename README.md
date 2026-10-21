@@ -2,8 +2,7 @@
 
 `mc` is a Rust command-line tool for creating Google Forms from YAML templates. It is designed for repeatable forms such as workshop registrations, club events, feedback forms, and surveys.
 
-> Project status: early development. The current command reads and parses a YAML form template; Google OAuth and Google Forms API creation are planned next.
-
+> Project status: YAML parsing, template validation, and Google OAuth login are implemented. Google Forms API creation is next.
 ## Why mc?
 
 Building recurring forms manually in the Google Forms web interface is repetitive and makes it easy for forms to drift apart. With `mc`, a form definition can live in a version-controlled YAML file and be created consistently from the command line.
@@ -98,7 +97,7 @@ Phase 1 aims to create a Google Form from a local YAML template.
 - [x] Scaffold the Rust CLI
 - [x] Parse YAML form templates
 - [x] Validate form templates
-- [ ] Configure Google OAuth
+- [x] Configure Google OAuth
 - [ ] Create forms through the Google Forms API
 - [ ] Add questions through the Google Forms API
 - [ ] Print edit and responder URLs
