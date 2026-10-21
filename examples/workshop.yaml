@@ -1,16 +1,41 @@
-title: "AI Agent Development Workshop"
-description: "Register for the hands-on weekend workshop."
+title: "Rust CLI Workshop Registration"
+description: "Register for the hands-on Rust CLI workshop. Please complete every required question."
 
 questions:
-  - title: "Full Name"
+  - title: "Full name"
     type: short_text
     required: true
 
-  - title: "Academic Year"
+  - title: "Email address"
+    type: short_text
+    required: true
+
+  - title: "What do you hope to learn from this workshop?"
+    type: paragraph
+    required: false
+
+  - title: "Current experience level"
+    type: radio
+    required: true
+    options:
+      - "Beginner"
+      - "Intermediate"
+      - "Advanced"
+
+  - title: "Topics you are interested in"
+    type: checkboxes
+    required: true
+    options:
+      - "Rust basics"
+      - "Command-line tools"
+      - "API integration"
+      - "OAuth authentication"
+      - "Error handling"
+
+  - title: "Preferred workshop session"
     type: dropdown
     required: true
     options:
-      - "1st Year"
-      - "2nd Year"
-      - "3rd Year"
-      - "4th Year"
+      - "Saturday morning"
+      - "Saturday afternoon"
+      - "Sunday morning"

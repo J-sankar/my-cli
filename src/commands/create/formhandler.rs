@@ -5,6 +5,17 @@ use std::{
     path::PathBuf,
 };
 
+use crate::commands::auth::google::GoogleRefreshResponse;
+
+#[derive(serde::Deserialize)]
+pub struct CreatedForm {
+    #[serde(rename = "formId")]
+    form_id: String,
+
+    #[serde(rename = "responderUri")]
+    pub responder_uri: String,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct FormData {
     pub title: String,
@@ -112,7 +123,7 @@ impl QuestionSpec {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 enum QuestionType {
     ShortText,
@@ -156,6 +167,7 @@ pub fn validate_form_data(form_data: &FormData) -> Result<(), String> {
             ));
         }
     }
+
     if !errors.trim().is_empty() {
         errors.insert_str(0, "Form Error\n");
         return Err(errors);
@@ -163,4 +175,133 @@ pub fn validate_form_data(form_data: &FormData) -> Result<(), String> {
     println!("No errors found");
 
     Ok(())
+}
+
+pub fn create_item(question: &QuestionSpec, index: usize) -> Result<serde_json::Value, String> {
+    match &question.question_type {
+        QuestionType::ShortText | QuestionType::Paragraph => {
+            let question_type = "textQuestion".to_string();
+            let is_paragraph = matches!(question.question_type, QuestionType::Paragraph);
+            let item = serde_json::json!({"createItem":{"item":{"title": &question.title,"question_item":{"question":{"required":question.required,question_type:{"paragraph":is_paragraph}}} },"location":{"index":index}}});
+            Ok(item)
+        }
+
+        QuestionType::Checkboxes | QuestionType::Dropdown | QuestionType::Radio => {
+            let question_type = match question.question_type {
+                QuestionType::Checkboxes => "CHECKBOX",
+                QuestionType::Dropdown => "DROP_DOWN",
+                QuestionType::Radio => "RADIO",
+                _ => "CHOICE_TYPE_UNSPECIFIED",
+            };
+            let options: Vec<serde_json::Value> = question
+                .options
+                .as_deref() // Option<Vec<String>> -> Option<&[String]>
+                .unwrap_or(&[])
+                .iter()
+                .map(|option| serde_json::json!({ "value": option }))
+                .collect();
+
+            let item = serde_json::json!({"createItem":{"item":{"title": &question.title,"question_item":{"question":{"required":question.required,"choiceQuestion": {"type":question_type, "options":options}}} },"location":{"index":index}}});
+            Ok(item)
+        }
+    }
+}
+pub fn create_empty_form(
+    title: &str,
+    token_data: &GoogleRefreshResponse,
+    http_client: &reqwest::blocking::Client,
+) -> Result<serde_json::Value, String> {
+    const CREATION_URI: &str = "https://forms.googleapis.com/v1/forms";
+    let body = serde_json::json!({
+        "info": {
+            "title": title,
+            "document_title":title
+        }
+    });
+    let res = http_client
+        .post(CREATION_URI)
+        .bearer_auth(token_data.get_access_token())
+        .json(&body)
+        .send()
+        .map_err(|err| err.to_string())?;
+    if !res.status().is_success() {
+        let err_body = res.text().unwrap_or_default();
+        return Err(err_body.to_string());
+    }
+    let res_body: serde_json::Value = res.json().map_err(|err| err.to_string())?;
+
+    Ok(res_body)
+}
+
+pub fn batch_update(
+    form_items: &[serde_json::Value],
+    created_form: &CreatedForm,
+    token_data: &GoogleRefreshResponse,
+    http_client: &reqwest::blocking::Client,
+) -> Result<serde_json::Value, String> {
+    let updation_uri: String = format!(
+        "https://forms.googleapis.com/v1/forms/{}:batchUpdate",
+        created_form.form_id
+    );
+    let body = serde_json::json!({
+        "includeFormInResponse":true,
+        "requests":
+            &form_items
+
+    });
+    let res = http_client
+        .post(updation_uri)
+        .bearer_auth(token_data.get_access_token())
+        .json(&body)
+        .send()
+        .map_err(|err| err.to_string())?;
+    if !res.status().is_success() {
+        let err_body = res.text().unwrap_or_default();
+        return Err(err_body.to_string());
+    }
+    let res_body: serde_json::Value = res.json().map_err(|err| err.to_string())?;
+
+    Ok(res_body)
+}
+
+pub fn update_form_info(
+    title: &str,
+    description: &str,
+    token_data: &GoogleRefreshResponse,
+    http_client: &reqwest::blocking::Client,
+    created_form: &CreatedForm,
+) -> Result<serde_json::Value, String> {
+    let updation_uri: String = format!(
+        "https://forms.googleapis.com/v1/forms/{}:batchUpdate",
+        created_form.form_id
+    );
+    let body = serde_json::json!({
+        "includeFormInResponse":true,
+        "requests":
+            [
+                {"updateFormInfo": {
+                    "info": {
+                        "title":title,
+                        "documentTitle":title,
+                        "description":description
+                    },
+                    "updateMask": "description"
+                }
+            }
+            ]
+
+    });
+    let res = http_client
+        .post(updation_uri)
+        .bearer_auth(token_data.get_access_token())
+        .json(&body)
+        .send()
+        .map_err(|err| err.to_string())?;
+    if !res.status().is_success() {
+        let err_body = res.text().unwrap_or_default();
+        return Err(err_body.to_string());
+    }
+    let res_body: serde_json::Value = res.json().map_err(|err| err.to_string())?;
+    // println!("{}",res_body);
+    Ok(res_body)
 }

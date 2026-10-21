@@ -51,6 +51,11 @@ impl fmt::Display for GoogleRefreshResponse {
     }
 }
 
+impl GoogleRefreshResponse {
+    pub fn get_access_token(&self) -> String {
+        self.access_token.to_string()
+    }
+}
 pub fn load_client_config() -> Result<GoogleClientConfig, String> {
     let path = Path::new(GOOGLE_CLIENT_CONFIG_PATH);
     let file = std::fs::File::open(path).map_err(|error| error.to_string())?;

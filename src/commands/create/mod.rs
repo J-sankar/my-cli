@@ -1,10 +1,15 @@
 use clap::{Args, Subcommand};
+use serde_json::Value;
 
-use crate::commands::auth::google::{self, Unauthorized};
+use crate::commands::auth::google::{self, GoogleRefreshResponse, Unauthorized};
+use crate::commands::create::formhandler::{create_item, update_form_info};
 use crate::utils::load_token;
 use formhandler::{parse_yaml_file, validate_form_data};
+
 use std::path::PathBuf;
 mod formhandler;
+
+use formhandler::{CreatedForm, batch_update, create_empty_form};
 
 #[derive(Subcommand)]
 pub enum CreateCommands {
@@ -57,9 +62,29 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
             }
         }
     };
+    let http_client = reqwest::blocking::Client::new();
+    let res = create_empty_form(&form_template.title, &token_response, &http_client)?;
+    let form_items: Vec<Value> = form_template
+        .questions
+        .iter()
+        .enumerate()
+        .map(|(index, question)| create_item(question, index))
+        .collect::<Result<_, _>>()?;
+
+    let created_form: CreatedForm = serde_json::from_value(res).map_err(|err| err.to_string())?;
+    let description = form_template.description.as_deref().unwrap_or_default();
+    let update_info = update_form_info(
+        &form_template.title,
+        description,
+        &token_response,
+        &http_client,
+        &created_form,
+    )?;
+    let edition_res = batch_update(&form_items, &created_form, &token_response, &http_client)?;
     println!(
-        "{:?}, {:?},{:?}",
-        form_template.title, form_template.description, form_template.questions
+        "form created successfully:\nResponsders' Url : {}",
+        created_form.responder_uri
     );
+
     Ok(())
 }
