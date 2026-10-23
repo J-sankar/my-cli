@@ -16,6 +16,12 @@ pub struct CreatedForm {
     pub responder_uri: String,
 }
 
+impl CreatedForm {
+    pub fn get_form_id(&self) -> &str {
+        &self.form_id
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct FormData {
     pub title: String,
@@ -149,7 +155,7 @@ pub fn parse_yaml_file(file: &PathBuf) -> Result<FormData, String> {
 }
 
 pub fn validate_form_data(form_data: &FormData) -> Result<(), String> {
-    println!("Validating form");
+    println!("Validating template...");
     let mut errors = String::new();
     if form_data.title.trim().is_empty() {
         errors.push_str("title empty in template file.\n");
@@ -172,7 +178,7 @@ pub fn validate_form_data(form_data: &FormData) -> Result<(), String> {
         errors.insert_str(0, "Form Error\n");
         return Err(errors);
     }
-    println!("No errors found");
+    println!("Template validation success");
 
     Ok(())
 }
@@ -238,7 +244,7 @@ pub fn batch_update(
     created_form: &CreatedForm,
     token_data: &GoogleRefreshResponse,
     http_client: &reqwest::blocking::Client,
-) -> Result<serde_json::Value, String> {
+) -> Result<(), String> {
     let updation_uri: String = format!(
         "https://forms.googleapis.com/v1/forms/{}:batchUpdate",
         created_form.form_id
@@ -259,9 +265,8 @@ pub fn batch_update(
         let err_body = res.text().unwrap_or_default();
         return Err(err_body.to_string());
     }
-    let res_body: serde_json::Value = res.json().map_err(|err| err.to_string())?;
 
-    Ok(res_body)
+    Ok(())
 }
 
 pub fn update_form_info(
@@ -270,7 +275,7 @@ pub fn update_form_info(
     token_data: &GoogleRefreshResponse,
     http_client: &reqwest::blocking::Client,
     created_form: &CreatedForm,
-) -> Result<serde_json::Value, String> {
+) -> Result<(), String> {
     let updation_uri: String = format!(
         "https://forms.googleapis.com/v1/forms/{}:batchUpdate",
         created_form.form_id
@@ -301,7 +306,5 @@ pub fn update_form_info(
         let err_body = res.text().unwrap_or_default();
         return Err(err_body.to_string());
     }
-    let res_body: serde_json::Value = res.json().map_err(|err| err.to_string())?;
-    // println!("{}",res_body);
-    Ok(res_body)
+    Ok(())
 }

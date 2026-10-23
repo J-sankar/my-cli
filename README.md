@@ -33,7 +33,7 @@ When run, the command:
 3. Validates the title, questions, options, and question types.
 4. Loads the saved Google login and obtains a short-lived access token.
 5. Creates the Google Form, then adds its description and questions.
-6. Prints the responder URL.
+6. Prints the responder and edit URLs.
 
 With `--dry-run`, it stops after step 3 and prints a preview.
 
@@ -125,6 +125,6 @@ Phase 1 aims to create a Google Form from a local YAML template. See [Phase 1 Sc
 - [x] Configure Google OAuth
 - [x] Create forms through the Google Forms API
 - [x] Add questions through the Google Forms API
-- [ ] Print edit and responder URLs
+- [x] Print edit and responder URLs
 
 Future phases may add an interactive wizard, editing existing forms, sections, and response handling.

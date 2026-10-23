@@ -33,7 +33,7 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
         return Err(format!("Not a valid file: {:?}", filename.name.display()));
     }
 
-    println!("creating form with template : {:?}", filename.name);
+    println!("Using template : {:?}", filename.name);
     let form_template = parse_yaml_file(&filename.name)?;
 
     validate_form_data(&form_template)?;
@@ -63,6 +63,7 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
         }
     };
     let http_client = reqwest::blocking::Client::new();
+    println!("creating form...");
     let res = create_empty_form(&form_template.title, &token_response, &http_client)?;
     let form_items: Vec<Value> = form_template
         .questions
@@ -73,17 +74,22 @@ pub fn handle_create_form(filename: &Filename) -> Result<(), String> {
 
     let created_form: CreatedForm = serde_json::from_value(res).map_err(|err| err.to_string())?;
     let description = form_template.description.as_deref().unwrap_or_default();
-    let update_info = update_form_info(
+    update_form_info(
         &form_template.title,
         description,
         &token_response,
         &http_client,
         &created_form,
     )?;
-    let edition_res = batch_update(&form_items, &created_form, &token_response, &http_client)?;
+    batch_update(&form_items, &created_form, &token_response, &http_client)?;
+    let edit_url = format!(
+        "https://docs.google.com/forms/d/{}/edit",
+        created_form.get_form_id()
+    );
     println!(
-        "form created successfully:\nResponsders' Url : {}",
-        created_form.responder_uri
+        "form created successfully:\nResponders' Url : {}\nEdit Url: {}",
+        created_form.responder_uri,
+        edit_url
     );
 
     Ok(())
