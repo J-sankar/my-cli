@@ -1,7 +1,7 @@
 use clap::{Args, Subcommand};
 use serde_json::Value;
 
-use crate::commands::auth::google::{self, GoogleRefreshResponse, Unauthorized};
+use crate::commands::auth::google::{self, Unauthorized};
 use crate::commands::create::formhandler::{create_item, update_form_info};
 use crate::utils::load_token;
 use formhandler::{parse_yaml_file, validate_form_data};
